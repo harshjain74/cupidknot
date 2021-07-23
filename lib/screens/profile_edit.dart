@@ -1,24 +1,24 @@
 import 'dart:io';
-import 'dart:ui';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-
-import 'package:email_validator/email_validator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'Homepage.dart';
 
-class SignupPageWidget extends StatefulWidget {
+class ProfileEditPageWidget extends StatefulWidget {
+  final Map<String, dynamic>? value;
+  ProfileEditPageWidget(this.value);
+
   @override
-  _SignupPageWidgetState createState() => _SignupPageWidgetState();
+  _ProfileEditPageWidgetState createState() => _ProfileEditPageWidgetState();
 }
 
-class _SignupPageWidgetState extends State<SignupPageWidget> {
-  final auth = FirebaseAuth.instance;
+class _ProfileEditPageWidgetState extends State<ProfileEditPageWidget> {
   TextEditingController firstnametextController = TextEditingController();
   TextEditingController lastnametextController = TextEditingController();
   TextEditingController emailtextController = TextEditingController();
@@ -30,27 +30,60 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
   TextEditingController countrytextController = TextEditingController();
   TextEditingController passwordtextController = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  final _firestore = FirebaseFirestore.instance;
-  String path =
+  String imageurl =
       'https://images2.minutemediacdn.com/image/upload/c_crop,h_1126,w_2000,x_0,y_181/f_auto,q_auto,w_1100/v1554932288/shape/mentalfloss/12531-istock-637790866.jpg';
 
-  File _image = File(
-      'https://images2.minutemediacdn.com/image/upload/c_crop,h_1126,w_2000,x_0,y_181/f_auto,q_auto,w_1100/v1554932288/shape/mentalfloss/12531-istock-637790866.jpg');
+  @override
+  void initState() {
+    super.initState();
+
+    print('value ${widget.value}');
+    setState(() {
+      imageurl = widget.value?['image data'];
+    });
+    firstnametextController =
+        TextEditingController(text: widget.value?['firstname']);
+    lastnametextController =
+        TextEditingController(text: widget.value?['lastname']);
+    emailtextController = TextEditingController(text: widget.value?['email']);
+    contacttextController =
+        TextEditingController(text: widget.value?['contact']);
+    addresstextController =
+        TextEditingController(text: widget.value?['address']);
+    citytextController = TextEditingController(text: widget.value?['addcity']);
+    statetextController =
+        TextEditingController(text: widget.value?['addstate']);
+    zipcodetextController =
+        TextEditingController(text: widget.value?['zipcode']);
+    countrytextController =
+        TextEditingController(text: widget.value?['country']);
+    passwordtextController =
+        TextEditingController(text: widget.value?['password']);
+  }
+
+  bool imagechanged = false;
+
+  File _image = File("");
   final picker = ImagePicker();
   Future setImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
 
     setState(() {
       _image = File(pickedFile!.path);
-      imagesetted = true;
     });
     // await setimg();
   }
 
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth auth = FirebaseAuth.instance;
+
+  String path =
+      'https://images2.minutemediacdn.com/image/upload/c_crop,h_1126,w_2000,x_0,y_181/f_auto,q_auto,w_1100/v1554932288/shape/mentalfloss/12531-istock-637790866.jpg';
+
   Future setimg() async {
     try {
       //if (_image. != null) {
-
+      print('error 2');
       Reference firebaseReference = FirebaseStorage.instance
           .ref()
           .child("profilepics")
@@ -61,6 +94,7 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
       await (await task).ref.getDownloadURL().then((value) async {
         setState(() {
           path = value;
+          imagechanged = true;
         });
         await _firestore
             .collection('userCart')
@@ -72,27 +106,42 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
     }
   }
 
-  bool imagesetted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    firstnametextController = TextEditingController();
-    lastnametextController = TextEditingController();
-    emailtextController = TextEditingController();
-    contacttextController = TextEditingController();
-    addresstextController = TextEditingController();
-    citytextController = TextEditingController();
-    statetextController = TextEditingController();
-    zipcodetextController = TextEditingController();
-    countrytextController = TextEditingController();
-    passwordtextController = TextEditingController();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
+      appBar: AppBar(
+        backgroundColor: Colors.yellowAccent, //FlutterFlowTheme.primaryColor,
+        automaticallyImplyLeading: true,
+        title: Text(
+          'Profile Edit',
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 18),
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back, color: Colors.black),
+        ),
+        actions: [
+          InkWell(
+            onTap: () {
+              Navigator.pop(context);
+            },
+            child: Padding(
+              padding: EdgeInsets.only(right: 20),
+              child: Center(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.black, fontSize: 18),
+                ),
+              ),
+            ),
+          ),
+        ],
+        centerTitle: true,
+        elevation: 4,
+      ),
       body: SafeArea(
         child: Container(
           width: MediaQuery.of(context).size.width,
@@ -108,26 +157,36 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
                 padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: Stack(
                   children: [
-                    InkWell(
-                      onTap: () async {
-                        await setImage();
-                      },
-                      child: Align(
-                        alignment: Alignment(0, 0),
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          clipBehavior: Clip.antiAlias,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                                image:
-                                    /* _image != null
+                    Align(
+                      alignment: Alignment(0, 0),
+                      child: imagechanged
+                          ? Container(
+                              width: 120,
+                              height: 120,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: DecorationImage(
+                                    image:
+                                        /* _image != null
                                   ? */
-                                    FileImage(_image)),
-                          ),
-                        ),
-                      ),
+
+                                        FileImage(_image)
+                                    //FileImage(_image),
+                                    //: NetworkImage(
+                                    //  'https://picsum.photos/seed/533/600'),
+                                    ),
+                              ),
+                            )
+                          : Container(
+                              width: 120,
+                              height: 120,
+                              clipBehavior: Clip.antiAlias,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.network(imageurl),
+                            ),
                     ),
                     Align(
                       alignment: Alignment(0.26, 0.92),
@@ -190,6 +249,9 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
                                   obscureText: false,
                                   decoration: InputDecoration(
                                     hintText: 'Harsh',
+                                    hintStyle: TextStyle(
+                                      fontFamily: 'Poppins',
+                                    ),
                                     enabledBorder: UnderlineInputBorder(
                                       borderSide: BorderSide(
                                         color: Colors.transparent,
@@ -783,13 +845,13 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        verifyregister();
+                        await update();
                       },
                       child: Container(
                         width: 125,
                         height: 40,
                         child: Center(
-                          child: Text('Sign Up',
+                          child: Text('Update',
                               style: TextStyle(color: Colors.white)),
                         ),
                         decoration: BoxDecoration(
@@ -819,7 +881,7 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
     String country,
     String password,
   ) async {
-    await _firestore.collection('userCart').doc(email).set({
+    await _firestore.collection('userCart').doc(email).update({
       'firstname': firstname,
       'lastname': lastname,
       'email': email,
@@ -830,7 +892,7 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
       'zipcode': zipcode,
       'country': country,
       'password': password,
-    }, SetOptions(merge: true)).then((value) => userinputclear());
+    }).then((value) => userinputclear());
   }
 
   userinputclear() {
@@ -846,72 +908,35 @@ class _SignupPageWidgetState extends State<SignupPageWidget> {
     addresstextController.clear();
   }
 
-  verifyregister() async {
-    if (EmailValidator.validate(emailtextController.text)) {
-      try {
-        if (firstnametextController.text != '' &&
-            lastnametextController.text != '' &&
-            emailtextController.text != '' &&
-            citytextController.text != '' &&
-            contacttextController.text != '' &&
-            addresstextController.text != '' &&
-            statetextController.text != '' &&
-            zipcodetextController.text != '' &&
-            countrytextController.text != '' &&
-            passwordtextController.text != '') {
-          final user = await auth.createUserWithEmailAndPassword(
-              email: emailtextController.text,
-              password: passwordtextController.text);
-          final User currentUser = auth.currentUser!;
+  update() async {
+    try {
+      await setuserdata(
+              firstnametextController.text,
+              lastnametextController.text,
+              emailtextController.text,
+              contacttextController.text,
+              addresstextController.text,
+              citytextController.text,
+              statetextController.text,
+              zipcodetextController.text,
+              countrytextController.text,
+              passwordtextController.text)
+          .whenComplete(() async {
+        setimg();
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (BuildContext context) {
+              return HomePageWidget();
+            },
+          ),
+        );
+      });
 
-          assert(user.user!.uid == currentUser.uid);
+      //show a pop up please add a valid email id. in else part or password length minimum6
 
-          await setuserdata(
-                  firstnametextController.text,
-                  lastnametextController.text,
-                  emailtextController.text,
-                  contacttextController.text,
-                  addresstextController.text,
-                  citytextController.text,
-                  statetextController.text,
-                  zipcodetextController.text,
-                  countrytextController.text,
-                  passwordtextController.text)
-              .whenComplete(() async {
-            setimg();
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (BuildContext context) {
-                  return HomePageWidget();
-                },
-              ),
-            );
-          });
-
-          //show a pop up please add a valid email id. in else part or password length minimum6
-        } else {
-          Fluttertoast.showToast(
-              msg: "Enter all details",
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.CENTER,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-              fontSize: 16.0);
-        }
-      } catch (e) {
-        Fluttertoast.showToast(
-            msg: "Email already registered",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.CENTER,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0);
-      }
-    } else {
+    } catch (e) {
       Fluttertoast.showToast(
-          msg: "Enter valid email",
+          msg: "Updation failed",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 1,
